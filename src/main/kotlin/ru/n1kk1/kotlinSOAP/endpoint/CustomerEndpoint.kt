@@ -25,14 +25,14 @@ class CustomerEndpoint {
     @ResponsePayload
     fun getCustomerById(@RequestPayload request: GetCustomerByIdRequest): GetCustomerByIdResponse? {
         val response = GetCustomerByIdResponse()
-        val customerEntity: CustomerEntity? = service?.getCustomerById(request.getId())
+        val customerEntity: CustomerEntity? = service?.getCustomerById(request.id)
         val customer = Customer()
         BeanUtils.copyProperties(customerEntity!!, customer)
-        response.setCustomer(customer)
+        response.customer = customer
         return response
     }
 
-    @PayloadRoot(namespace = NAMESPACE_URI, localPart = "getAllMoviesRequest")
+    @PayloadRoot(namespace = NAMESPACE_URI, localPart = "getAllCustomersRequest")
     @ResponsePayload
     fun getAllCustomers(@RequestPayload request: GetAllCustomersRequest?): GetAllCustomersResponse? {
         val response = GetAllCustomersResponse()
@@ -43,18 +43,18 @@ class CustomerEndpoint {
             BeanUtils.copyProperties(entity!!, customer)
             customerList.add(customer)
         }
-        response.getCustomer().addAll(customerList)
+        response.customer.addAll(customerList)
         return response
     }
 
-    @PayloadRoot(namespace = CustomerEndpoint.NAMESPACE_URI, localPart = "addCustomerRequest")
+    @PayloadRoot(namespace = NAMESPACE_URI, localPart = "addCustomerRequest")
     @ResponsePayload
-    fun addMovie(@RequestPayload request: AddCustomerRequest): AddCustomerResponse? {
+    fun addCustomer(@RequestPayload request: AddCustomerRequest): AddCustomerResponse? {
         val response = AddCustomerResponse()
         val newCustomer = Customer()
         val serviceStatus = ServiceStatus()
-        val newCustomerEntity = CustomerEntity(request.getFirstName(), request.getLastName(), request.getSalary(),
-                request.getCity(), request.getCountry(), request.getEmail())
+        val newCustomerEntity = CustomerEntity(request.id, request.firstName, request.lastName, request.salary,
+                request.city, request.country, request.email)
         val savedCustomerEntity: CustomerEntity? = service?.addCustomer(newCustomerEntity)
         if (savedCustomerEntity == null) {
             serviceStatus.statusCode = "CONFLICT"
@@ -64,56 +64,75 @@ class CustomerEndpoint {
             serviceStatus.statusCode = "SUCCESS"
             serviceStatus.message = "Content Added Successfully"
         }
-        response.setCustomer(newCustomer)
-        response.setServiceStatus(serviceStatus)
+        response.customer = newCustomer
+        response.serviceStatus = serviceStatus
         return response
     }
 
-    @PayloadRoot(namespace = CustomerEndpoint.NAMESPACE_URI, localPart = "updateCustomerRequest")
+    @PayloadRoot(namespace = NAMESPACE_URI, localPart = "updateCustomerRequest")
     @ResponsePayload
     fun updateCustomer(@RequestPayload request: UpdateCustomerRequest): UpdateCustomerResponse? {
         val response = UpdateCustomerResponse()
         val serviceStatus = ServiceStatus()
         // 1. Find if customer available
-        val customerFromDB: CustomerEntity? = service?.getCustomerBySecondName(request.getLastName())
+        val customerFromDB: CustomerEntity? = service?.getCustomerById(request.id)
         if (customerFromDB == null) {
             serviceStatus.statusCode = "NOT FOUND"
-            serviceStatus.message = "Customer with '" + request.getLastName().toString() + "' last name not found"
+            serviceStatus.message = "Customer with id = " + request.id.toString() + " not found"
         } else { // 2. Get updated customer information from the request
-            customerFromDB.setCustomersFirstName(request.getFirstName())
-            customerFromDB.setCustomersSecondName(request.getLastName())
-            customerFromDB.setCustomersSalary(request.getSalary())
-            customerFromDB.setCustomersCity(request.getCity())
-            customerFromDB.setCustomersCountry(request.getCountry())
-            customerFromDB.setCustomersEmail(request.getEmail())
+            customerFromDB.setCustomersFirstName(request.firstName)
+            customerFromDB.setCustomersLastName(request.lastName)
+            customerFromDB.setCustomersSalary(request.salary)
+            customerFromDB.setCustomersCity(request.city)
+            customerFromDB.setCustomersCountry(request.country)
+            customerFromDB.setCustomersEmail(request.email)
             // 3. update the movie in database
             val flag: Boolean? = service?.updateCustomer(customerFromDB)
             if (flag == null) {
                 serviceStatus.statusCode = "CONFLICT"
-                serviceStatus.message = "Exception while updating Entity=" + request.getFirstName() + request.getLastName()
+                serviceStatus.message = "Exception while updating Entity=" + request.firstName + request.lastName
             } else {
                 serviceStatus.statusCode = "SUCCESS"
                 serviceStatus.message = "Content updated Successfully"
             }
         }
-        response.setServiceStatus(serviceStatus)
+        response.serviceStatus = serviceStatus
         return response
     }
 
-    @PayloadRoot(namespace = CustomerEndpoint.NAMESPACE_URI, localPart = "deleteCustomerRequest")
+    @PayloadRoot(namespace = NAMESPACE_URI, localPart = "deleteCustomerRequest")
     @ResponsePayload
     fun deleteCustomer(@RequestPayload request: DeleteCustomerRequest): DeleteCustomerResponse? {
         val response = DeleteCustomerResponse()
         val serviceStatus = ServiceStatus()
-        val flag: Boolean? = service?.deleteCustomer(request.getId())
+        val flag: Boolean? = service?.deleteCustomer(request.id)
         if (flag == null) {
             serviceStatus.statusCode = "FAIL"
-            serviceStatus.message = "Exception while deleting Entity id=" + request.getId()
+            serviceStatus.message = "Exception while deleting Entity id=" + request.id
         } else {
             serviceStatus.statusCode = "SUCCESS"
             serviceStatus.message = "Content Deleted Successfully"
         }
-        response.setServiceStatus(serviceStatus)
+        response.serviceStatus = serviceStatus
+        return response
+    }
+
+    @PayloadRoot(namespace = NAMESPACE_URI, localPart = "getImageRequest")
+    @ResponsePayload
+    fun getImage(@RequestPayload request: GetImageRequest): GetImageResponse? {
+        val response = GetImageResponse()
+        val serviceStatus = ServiceStatus()
+        val downloadedImage: ByteArray? = service?.downloadImage(request.imageName)
+        if (downloadedImage == null) {
+            serviceStatus.statusCode = "CONFLICT"
+            serviceStatus.message = "Exception while downloading image"
+        } else {
+            serviceStatus.statusCode = "SUCCESS"
+            serviceStatus.message = "Content downloaded successfully"
+        }
+        response.image = downloadedImage
+        response.serviceStatus = serviceStatus
+
         return response
     }
 

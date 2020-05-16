@@ -4,6 +4,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import ru.n1kk1.kotlinSOAP.entity.CustomerEntity
 import ru.n1kk1.kotlinSOAP.repository.CustomerRepository
+import java.io.IOException
 import javax.transaction.Transactional
 
 @Service
@@ -30,13 +31,13 @@ class CustomerServiceImpl : CustomerService {
     }
 
     @Override
-    override fun getCustomerBySecondName(secondName: String?): CustomerEntity? {
-        return this.repository?.findBySecondName(secondName)
+    override fun getCustomerByLastName(lastName: String?): CustomerEntity? {
+        return this.repository?.findByLastName(lastName)
     }
 
     @Override
     override fun getAllCustomers(): List<CustomerEntity?> {
-        val list: ArrayList<CustomerEntity> = ArrayList <CustomerEntity> ()
+        val list: ArrayList<CustomerEntity> = ArrayList()
         repository?.findAll()?.forEach { e ->
             if (e != null) {
                 list.add(e)
@@ -68,13 +69,24 @@ class CustomerServiceImpl : CustomerService {
 
     @Override
     override fun deleteCustomer(id: Long): Boolean {
-        try {
+        return try {
             this.repository?.deleteById(id)
-            return true
+            true
         } catch (e: Exception) {
             e.printStackTrace()
-            return false
+            false
         }
+    }
+
+    @Override
+    override fun downloadImage(name: String): ByteArray? {
+        val `in` = javaClass.getResourceAsStream("/$name")
+        try {
+            return `in`.readAllBytes()
+        } catch (e: IOException) {
+            e.printStackTrace()
+        }
+        return null
     }
 
 }

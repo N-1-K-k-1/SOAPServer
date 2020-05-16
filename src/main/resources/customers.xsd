@@ -48,6 +48,7 @@
     <xs:element name="addCustomerRequest">
         <xs:complexType>
             <xs:sequence>
+                <xs:element name="id" type="xs:long"/>
                 <xs:element name="firstName" type="xs:string"/>
                 <xs:element name="lastName" type="xs:string"/>
                 <xs:element name="salary" type="xs:long"/>
@@ -68,6 +69,7 @@
     <xs:element name="updateCustomerRequest">
         <xs:complexType>
             <xs:sequence>
+                <xs:element name="id" type="xs:long"/>
                 <xs:element name="firstName" type="xs:string"/>
                 <xs:element name="lastName" type="xs:string"/>
                 <xs:element name="salary" type="xs:long"/>
@@ -99,4 +101,20 @@
         </xs:complexType>
     </xs:element>
 
+    <xs:element name="getImageRequest">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="imageName" type="xs:string"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:element name="getImageResponse">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="serviceStatus" type="tns:serviceStatus"/>
+                <xs:element name="image" type="xs:base64Binary"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
 </xs:schema>
